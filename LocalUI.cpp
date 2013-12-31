@@ -22,7 +22,11 @@ void LocalUI::update(){
     long thisSecond = millis() / 1000;
 
     LocalUI::readButtons(thisSecond);
-    if (!menu.isInMenu()){
+    if (menu.isInMenu()){
+      if (thisSecond > lastKeyPressSecond + 30)
+        menu.leaveMenu();
+    } else
+    {
       LocalUI::outputMotorStatus();
       
       if (thisSecond % 5 == 0 && thisSecond != lastSensorOutSecond){
@@ -37,14 +41,20 @@ void LocalUI::update(){
 }
 
 void LocalUI::outputMotorStatus(){
-      lcd->setCursor(0, 0);
       int motor = state->getMotor();
   
+      lcd->setCursor(0, 0);
       if (motor > 0){
         lcd->print("On:");
         lcd->print(motor);
-        if (state->intervalCountdown > 0 && state->intervalCountdown!=0xFFFF){
-            lcd->print(" ");  
+      } else
+      {
+        lcd->print("Off");
+      }
+      
+      if (state->intervalCountdown > 0 && state->intervalCountdown!=0xFFFF){
+            lcd->setCursor(3, 0);
+            lcd->print(" ");
             if (state->intervalCountdown > 3660){
                 float hours = (float)state->intervalCountdown / 3660;
                 lcd->print(hours);
@@ -58,10 +68,6 @@ void LocalUI::outputMotorStatus(){
                 lcd->print(state->intervalCountdown);
                 lcd->print(" sec");
             }
-        }
-      } else
-      {
-        lcd->print("Off");
       }
       lcd->print("             ");
 }
@@ -103,9 +109,9 @@ void LocalUI::outputSensorStatus(){
 
 
 void LocalUI::backlight(long thisSecond, int ambient){
-    if (ambient > 600){                  //Unit is to be installed in a basement with no natural light
+    if (ambient > 500){                  //Unit is to be installed in a basement with no natural light
       backlightOn(thisSecond);
-    } else if (ambient < 400){             //Turn off backlight if lights are off and no one is around after about a min. 400..600 is the deadband to prevent jitter
+    } else if (ambient < 400){             //Turn off backlight if lights are off and no one is around after about a min. 400..500 is the deadband to prevent jitter
       if (thisSecond > lcdLastOnSecond + 60){
         lcd->setBacklight(LOW);
       }
@@ -125,6 +131,7 @@ void LocalUI::readButtons(long thisSecond){
     backlightOn(thisSecond);
     menu.button1();
     button1Released = false;
+    lastKeyPressSecond = thisSecond;
   } else if (button1->read() == LOW)
   {
     button1Released = true;
@@ -134,6 +141,7 @@ void LocalUI::readButtons(long thisSecond){
     backlightOn(thisSecond);
     menu.button2();
     button2Released = false;
+    lastKeyPressSecond = thisSecond;
   } else if (button2->read() == LOW){
     button2Released = true;
   }

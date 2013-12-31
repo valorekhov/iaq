@@ -1,6 +1,8 @@
 #include <Wire.h>
 #include <Bounce.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
+
 
 #include "DHT.h"
 #include "State.h"
@@ -17,6 +19,12 @@
 #define Sensor3Pin 4
 #define MotorPwmControlPin 9
 #define PhotoDiodePin A0
+
+#if DEBUG
+#define SensorPollingInterval 10
+#else
+#define SensorPollingInterval 60
+#endif
 
 //Sensor, state Values
 State state(MotorPwmControlPin, MotorOnLedPin);
@@ -64,7 +72,7 @@ void loop() {
     state.decrementCountdown();
     thisSecond = second;
 
-    if (second % 10 == 0){
+    if (second % SensorPollingInterval == 0){
       pollSensors();
     }   
   }  

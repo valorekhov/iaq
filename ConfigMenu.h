@@ -7,6 +7,13 @@
 
 #include "State.h"
 
+#define MenuRun 0
+#define MenuIntOn 1
+#define MenuIntOff 2
+#define MenuDefSpeed 3
+#define MenuCurrentSpeed 4
+#define MenuTurnOff 5
+
 class ConfigMenu
 {
 public:
@@ -14,11 +21,12 @@ public:
     lcd = _lcd;
     state = _state;
     
-    topMenu[0] = "Run";
-    topMenu[1] = "Intermittent On";
-    topMenu[2] = "Intermittent Off";
-    topMenu[3] = "Turn Off";
-    
+    topMenu[MenuRun] = "Run";
+    topMenu[MenuIntOn] = "Periodic On";
+    topMenu[MenuIntOff] = "Periodic Off";
+    topMenu[MenuDefSpeed] = "Default Speed";
+    topMenu[MenuCurrentSpeed] = "Current Speed";
+    topMenu[MenuTurnOff] = "Turn Off";    
   }
   
   bool isInMenu(){
@@ -27,16 +35,18 @@ public:
   
   void button1();
   void button2();
-
+  void leaveMenu();
 
 private:
   void enterMenu();
   void showTopMenu();
-  void showRunMenu();
-  void showIntermittentMenu();
-  void leaveMenu();
+  void showRunMenu(bool advance);
+  void initBottomMenu();
+  void showIntermittentMenu(bool advance);
+  void showSpeedMenu(bool advance);
+  void showHrsSelection(char* defaultSetting);
   LiquidCrystal* lcd;
-  char *topMenu[4];
+  char *topMenu[6];
   short menuLevel;
   short topMenuIdx;
   short bottomMenuIdx;  

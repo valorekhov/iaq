@@ -34,6 +34,8 @@ private:
   long lcdLastOnSecond;
   short currentOutSensor;
   long lastSensorOutSecond;
+  long lastKeyPressSecond;
+
   State *state;
 };
 
