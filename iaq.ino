@@ -35,7 +35,7 @@ long thisSecond = -1;
 // the setup routine runs once when you press reset:
 void setup() {  
   state.setup(SensorCount + 1);      // One more sensor slot for outside temp, rh
-  ui.setup(Button1Pin, Button2Pin);
+  ui.setup(&state, Button1Pin, Button2Pin);
   serialiface.setup(&state);
   
   pinMode(MotorOnLedPin, OUTPUT);
@@ -58,7 +58,7 @@ void loop() {
   state.ambient = analogRead(PhotoDiodePin);
 
   serialiface.monitorSerial();
-  ui.update(&state);  
+  ui.update();  
 
   if (second >  thisSecond){
     state.decrementCountdown();

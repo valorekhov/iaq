@@ -22,6 +22,8 @@ public:
       }
   }
 
+  /*PROGMEM*/ int intermittentOn;
+  /*PROGMEM*/ int intermittentOff;
   int intervalCountdown;
   int ambient;
   float* tempValues;

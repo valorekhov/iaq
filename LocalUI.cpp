@@ -2,36 +2,41 @@
 #include <Arduino.h>
 
 
-void LocalUI::setup(short button1Pin, short button2Pin)
+void LocalUI::setup(State *_state, short button1Pin, short button2Pin)
 {
+  state = _state;
   pinMode(button1Pin, INPUT);     
   pinMode(button2Pin, INPUT);
   
-  button1 = new Bounce(button1Pin, 5);
-  button2 = new Bounce(button2Pin, 5);
+  button1 = new Bounce(button1Pin, 50);
+  button2 = new Bounce(button2Pin, 50);
   
   lcd = new LiquidCrystal(0);
   lcd->begin(16, 2);
   lcd->setBacklight(HIGH);
+  
+  menu.setup(_state, lcd);
 }
 
-void LocalUI::update(State *state){
+void LocalUI::update(){
     long thisSecond = millis() / 1000;
 
-    LocalUI::readButtons();
-    LocalUI::outputMotorStatus(state);
-    
-    if (thisSecond % 5 == 0 && thisSecond != lastSensorOutSecond){
-          LocalUI::outputSensorStatus(state);
-          lastSensorOutSecond = thisSecond;
-    }
-    
-    if (thisSecond % 10 == 0){
-      LocalUI::backlight(thisSecond, state->ambient);
+    LocalUI::readButtons(thisSecond);
+    if (!menu.isInMenu()){
+      LocalUI::outputMotorStatus();
+      
+      if (thisSecond % 5 == 0 && thisSecond != lastSensorOutSecond){
+            LocalUI::outputSensorStatus();
+            lastSensorOutSecond = thisSecond;
+      }
+      
+      if (thisSecond % 10 == 0){
+        LocalUI::backlight(thisSecond, state->ambient);
+      }
     }
 }
 
-void LocalUI::outputMotorStatus(State *state){
+void LocalUI::outputMotorStatus(){
       lcd->setCursor(0, 0);
       int motor = state->getMotor();
   
@@ -61,7 +66,7 @@ void LocalUI::outputMotorStatus(State *state){
       lcd->print("             ");
 }
 
-void LocalUI::outputSensorStatus(State *state){
+void LocalUI::outputSensorStatus(){
       lcd->setCursor(0, 1);
       int sensorCount = state->getSensorCount();
       int tries = 0;
@@ -78,8 +83,7 @@ void LocalUI::outputSensorStatus(State *state){
            lcd->print("S#");
            lcd->print(currentOutSensor);
            lcd->print(" ");
-        }
-        
+        }        
         if (!isnan(state->tempValues[currentOutSensor])){
              lcd->print("T=");
              lcd->print((int)state->tempValues[currentOutSensor]);
@@ -100,8 +104,7 @@ void LocalUI::outputSensorStatus(State *state){
 
 void LocalUI::backlight(long thisSecond, int ambient){
     if (ambient > 600){                  //Unit is to be installed in a basement with no natural light
-      lcdLastOnSecond = thisSecond;
-      lcd->setBacklight(HIGH);
+      backlightOn(thisSecond);
     } else if (ambient < 400){             //Turn off backlight if lights are off and no one is around after about a min. 400..600 is the deadband to prevent jitter
       if (thisSecond > lcdLastOnSecond + 60){
         lcd->setBacklight(LOW);
@@ -109,23 +112,31 @@ void LocalUI::backlight(long thisSecond, int ambient){
     }
 }
 
-void LocalUI::readButtons(){
+void LocalUI::backlightOn(long thisSecond){
+      lcdLastOnSecond = thisSecond;
+      lcd->setBacklight(HIGH);
+}
+
+void LocalUI::readButtons(long thisSecond){
   button1->update();
-  return;
-/*  if (button1.read() == HIGH){
-    if (stateReading == 0){
-        stateReading = 1;
-    } else 
-    {
-      stateReading = 0;
-    }
-  }
-  if (stateReading == 1) {
-      motorOn();
-  } else 
+  button2->update();
+  if (button1Released && button1->read() == HIGH)
   {
-        motorOff();
-  }*/
+    backlightOn(thisSecond);
+    menu.button1();
+    button1Released = false;
+  } else if (button1->read() == LOW)
+  {
+    button1Released = true;
+  }
+  if (button2Released && button2->read() == HIGH)
+  {
+    backlightOn(thisSecond);
+    menu.button2();
+    button2Released = false;
+  } else if (button2->read() == LOW){
+    button2Released = true;
+  }
 }
 
 

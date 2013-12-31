@@ -63,6 +63,9 @@ void SerialInterface::reportSensors(){
       if (state->intervalCountdown != 0 && state->intervalCountdown != 0xFFFF)
         printValue("Countdown", (int)state->intervalCountdown);
       printValue("AmbientLight", (int)state->ambient);
+      printValue("IntermittentOn", state->intermittentOn);
+      printValue("IntermittentOff", state->intermittentOff);
+
       
       int sensorCount = state->getSensorCount();
       for(char i=1; i<sensorCount; i++){
